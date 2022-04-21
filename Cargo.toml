@@ -1,0 +1,15 @@
+[package]
+name = "raise"
+version = "1.0.0"
+edition = "2021"
+categories = ["rust-patterns"]
+keywords = [
+    "raise",
+    "yeet",
+    "throw",
+    "error-handling",
+    "errors",
+]
+license = "Unlicense OR CC0-1.0 OR MIT OR Apache-2.0"
+description = "`yeet!` all the things"
+repository = "https://github.com/fee1-dead/raise"
