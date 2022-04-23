@@ -33,33 +33,78 @@
 */
 
 /// A trait for a return type that can be converted from a `yeet!`ed value.
-pub trait Yeetable {
-    /// The type of the `yeet!`ed value.
-    type Err;
-
+///
+/// # Usage
+///
+/// ```rust
+/// # use raise::{Yeet, yeet};
+///
+/// #[derive(PartialEq, Debug)]
+/// pub struct Error;
+///
+/// #[derive(PartialEq, Debug)]
+/// pub struct Errors(Vec<Error>);
+/// 
+/// impl Yeet<()> for Errors {
+///     fn from_err((): ()) -> Errors {
+///         Errors(vec![])
+///     }
+/// }
+///
+/// impl Yeet<Error> for Errors {
+///     fn from_err(err: Error) -> Errors {
+///         Errors(vec![err])
+///     }
+/// }
+///
+/// fn foo() -> Errors {
+///     yeet!();
+/// }
+/// 
+/// fn bar() -> Errors {
+///     yeet!(Error);
+/// }
+/// 
+/// assert_eq!(foo().0, vec![]);
+/// assert_eq!(bar().0, vec![Error]);
+/// ```
+pub trait Yeet<E> {
     /// Convert the `yeet!`ed value to the return type.
-    fn from_err(err: Self::Err) -> Self;
+    fn from_err(err: E) -> Self;
 }
 
-impl<T> Yeetable for Option<T> {
-    type Err = ();
+impl<T> Yeet<()> for Option<T> {
     fn from_err((): ()) -> Self {
         None
     }
 }
 
-impl<T, E> Yeetable for Result<T, E> {
-    type Err = E;
+impl<T, E> Yeet<E> for Result<T, E> {
     fn from_err(err: E) -> Self {
         Err(err)
     }
 }
 
 /// The `yeet` macro. Does not work inside `try` blocks.
+///
+/// # Usage
+///
+/// ```rust
+/// # use raise::yeet;
+/// fn foo() -> Option<u32> {
+///     yeet!();
+/// }
+/// assert_eq!(foo(), None);
+///
+/// fn bar() -> Result<(), u32> {
+///     yeet!(42);
+/// }
+/// assert_eq!(bar(), Err(42));
+/// ```
 #[macro_export]
 macro_rules! yeet {
-    () => {{return $crate::Yeetable::from_err(())}};
-    ($e:expr) => {{return $crate::Yeetable::from_err($e)}};
+    ($(,)?) => {{return $crate::Yeet::from_err(())}};
+    ($e:expr$(,)?) => {{return $crate::Yeet::from_err($e)}};
 }
 
 pub use self::yeet as raise;
@@ -79,7 +124,7 @@ mod tests {
 
     fn baz(x: u32) -> Result<u32, u32> {
         if x % 2 == 1 {
-            yeet!(x);
+            yeet!(x,);
         }
 
         Ok(x)
